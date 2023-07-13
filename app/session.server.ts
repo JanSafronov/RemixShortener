@@ -41,3 +41,32 @@ function createDatabaseSessionStorage(
     },
   })
 }
+
+const {
+  getSession: _getSession,
+  commitSession,
+  destroySession,
+} = createDatabaseSessionStorage({
+  name: '__session',
+  path: '/',
+  httpOnly: true,
+  maxAge: DEFAULT_MAX_AGE,
+  sameSite: 'lax',
+  secrets: [process.env.SESSION_SECRET || DEFAULT_SECRET],
+})
+
+async function getSession(...args: any[]) {
+  const session = await _getSession(...args)
+
+  if (session.has('invalid')) {
+    throw redirect(INVALID_SESSION_REDIRECT, {
+      headers: {
+        'Set-Cookie': await destroySession(session),
+      },
+    })
+  }
+
+  return session
+}
+
+export { getSession, commitSession, destroySession }
