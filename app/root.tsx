@@ -121,3 +121,48 @@ const Document = withEmotionCache(
     )
   }
 )
+
+export default function App() {
+  const loaderData = useLoaderData<LoaderData>()
+  return (
+    <Document themeName={loaderData.themeName}>
+      <Outlet />
+    </Document>
+  )
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  return (
+    <Document themeName={DEFAULT_THEME}>
+      <Alert severity="error" sx={{ mt: 2 }}>
+        <AlertTitle>Error</AlertTitle>
+        <Typography>An unknown error occurred!</Typography>
+        {process.env.NODE_ENV === 'development' && (
+          <pre style={{ wordWrap: 'break-word', whiteSpace: 'pre-wrap' }}>
+            {error.stack}
+          </pre>
+        )}
+        <Link to="/" variant="body1">
+          Go back
+        </Link>
+      </Alert>
+    </Document>
+  )
+}
+
+export function CatchBoundary() {
+  const caught = useCatch()
+  return (
+    <Document themeName={DEFAULT_THEME}>
+      <Alert severity="error" sx={{ mt: 2, width: '100%' }}>
+        <AlertTitle>
+          {caught.status} - {caught.statusText}
+        </AlertTitle>
+        <Typography>{caught.data}</Typography>
+        <Link to="/" variant="body1">
+          Go back
+        </Link>
+      </Alert>
+    </Document>
+  )
+}
