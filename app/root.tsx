@@ -69,3 +69,55 @@ interface DocumentProps {
   themeName: ThemeName
   children: React.ReactNode
 }
+
+const Document = withEmotionCache(
+  ({ themeName, children }: DocumentProps, emotionCache) => {
+    const theme = themes[themeName]
+    const transition = useTransition()
+    const clientStyleData = useContext(ClientStyleContext)
+
+    useEffect(() => {
+      // When the state is idle then we can complete the progress bar
+      if (transition.state === 'idle') nProgress.done()
+      // And when it's something else it means it's either submitting a form or
+      // waiting for the loaders of the next location so we start it
+      else nProgress.start()
+    }, [transition.state])
+
+    useEnhancedEffect(() => {
+      // Re-link sheet container
+      emotionCache.sheet.container = document.head
+      // Re-inject tags
+      const tags = emotionCache.sheet.tags
+      emotionCache.sheet.flush()
+      tags.forEach(tag => {
+        ;(emotionCache.sheet as any)._insertTag(tag)
+      })
+      // Reset cache to reapply global styles
+      clientStyleData.reset()
+    }, [])
+
+    return (
+      <html lang="en">
+        <head>
+          <Meta />
+          <Links />
+          <meta name="theme-color" content={theme.palette.primary.main} />
+          <meta
+            name="emotion-insertion-point"
+            content="emotion-insertion-point"
+          />
+        </head>
+        <body>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            {children}
+          </ThemeProvider>
+          <ScrollRestoration />
+          <Scripts />
+          {process.env.NODE_ENV === 'development' && <LiveReload />}
+        </body>
+      </html>
+    )
+  }
+)
