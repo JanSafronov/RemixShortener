@@ -14,6 +14,14 @@ if (process.env.NODE_ENV === 'production') {
   prisma.$connect()
 }
 
-
+function purgeExpiredSessions() {
+  return prisma.session.deleteMany({
+    where: {
+      expires: {
+        lt: new Date(),
+      },
+    },
+  })
+}
 
 module.exports = { purgeExpiredSessions }
